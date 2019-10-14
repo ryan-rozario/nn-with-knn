@@ -8,15 +8,17 @@ NUMBER_OF_INPUT_NODES = 50
 NUMBER_OF_OUTPUT_NODES = 2
 NUMBER_OF_HIDDEN_NODES =20
 
+#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 ## sigmoid activation function using pytorch
 def sigmoid_activation(z):
     return 1 / (1 + torch.exp(-z))
 
 
 class Model():
-    def __init__(self):
-        super().__init__(self,w1,w2,b1,b2)
+    def __init__(self,w1,w2,b1,b2):
         ## initialize tensor variables for weights 
+        
         self.w1 = w1 #torch.randn(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES) # weight for hidden layer
         self.w2 = w2 #torch.randn(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES) # weight for output layer
 
@@ -38,8 +40,24 @@ class Model():
 
 
 def main():
+    
     ## initialize tensor for inputs, and outputs 
 
+    '''
+    #Random lines of code for testing to be deleted later
+    x = torch.randn((1, NUMBER_OF_INPUT_NODES))
+    y = torch.randn((1, NUMBER_OF_OUTPUT_NODES))  
+    w1 =torch.randn(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES) # weight for hidden layer
+    w2 =torch.randn(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES) # weight for output layer
+
+        ## initialize tensor variables for bias terms 
+    b1 =torch.randn((1, NUMBER_OF_HIDDEN_NODES)) # bias for hidden layer
+    b2 =torch.randn((1, NUMBER_OF_OUTPUT_NODES))
+    model = Model(w1,w2,b1,b2)
+    ans = model.forward_propogation(x)
+    print(ans)
+
+    '''
 
 
 
@@ -50,6 +68,7 @@ if __name__ == "__main__":
 
 
 '''
+Playing around with pytorch to be deleted later
 class Model(nn.Module):
     def __init__(self):
         super().__init__()
