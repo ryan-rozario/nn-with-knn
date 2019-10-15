@@ -86,15 +86,25 @@ class Particle:
         self.fitness=None  #this had to be done
         self.output=None   #this has to be done
 
-
+    '''
     def run_forward(self,inp_x):
         output = model.Model(self.w1,self.w2,self.b1,self.b2).forward_propogation(inp_x)
 
         return output
+    '''
+    def calc_fitness(self,inp_x,out_y):
+        for i in range(len(inp_x)):
+            output.append(model.Model(self.w1,self.w2,self.b1,self.b2).forward_propogation(inp_x[i]))
+        output = z_score(output)   #write z-score function
+        s1 = similarity_self(output,out_y)
+        s2 = similarity_nonself(output,out_y)
 
-    def calc_fitness(self):
-        #calculate fitness function
-        pass
+        #we have a weight for each class
+        #return output as per equation 6 in the paper
+
+
+
+
 
         
 
