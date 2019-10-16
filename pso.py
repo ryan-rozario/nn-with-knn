@@ -68,11 +68,11 @@ class Swarm:
                     self.global_best = copy.deepcopy(self.group[i])
 
 
-        
-
-
-
-
+def z_score(x):
+        mean=np.mean(x)
+        std=np.std(x)
+        z_score=(x-mean)/std
+        return z_score     
 
 class Particle:
     def  __init__(self):
@@ -92,11 +92,6 @@ class Particle:
 
         return output
     '''
-    def z_score(x):
-        mean=np.mean(x)
-        std=np.std(x)
-        z_score=(x-mean)/std
-        return z_score
 
     def calc_fitness(self,inp_x,out_y):
         for i in range(len(inp_x)):
