@@ -67,13 +67,6 @@ class Swarm:
                 if self.group[i].fitness > self.global_best.fitness:  #check conditions and sign again
                     self.global_best = copy.deepcopy(self.group[i])
 
-
-def z_score(x):
-        mean=np.mean(x)
-        std=np.std(x)
-        z_score=(x-mean)/std
-        return z_score     
-
 class Particle:
     def  __init__(self):
         self.w1 =torch.randn(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES) # weight for hidden layer
@@ -93,12 +86,18 @@ class Particle:
         return output
     '''
 
+    def z_score(self,x):
+        mean=np.mean(x)
+        std=np.std(x)
+        z=(x-mean)/std
+        return z 
+
     def calc_fitness(self,inp_x,out_y):
         for i in range(len(inp_x)):
-            output.append(model.Model(self.w1,self.w2,self.b1,self.b2).forward_propogation(inp_x[i]))
-        output = z_score(output)   #write z-score function
-        s1 = similarity_self(output,out_y)
-        s2 = similarity_nonself(output,out_y)
+            self.output.append(model.Model(self.w1,self.w2,self.b1,self.b2).forward_propogation(inp_x[i]))
+        self.output = self.z_score(self.output)   #z-score function
+        s1 = similarity_self(self.output,out_y)
+        s2 = similarity_nonself(self.output,out_y)
 
         #we have a weight for each class
         #return output as per equation 6 in the paper
