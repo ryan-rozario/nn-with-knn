@@ -92,6 +92,12 @@ class Particle:
 
         return output
     '''
+    def z_score(x):
+        mean=np.mean(x)
+        std=np.std(x)
+        z_score=(x-mean)/std
+        return z_score
+
     def calc_fitness(self,inp_x,out_y):
         for i in range(len(inp_x)):
             output.append(model.Model(self.w1,self.w2,self.b1,self.b2).forward_propogation(inp_x[i]))
