@@ -2,7 +2,10 @@ import torch
 import model
 import copy 
 import random
+import scipy
+import numpy as np
 
+NEAREST_NEIGHBOURS=10
 
 NUMBER_OF_INPUT_NODES = 50
 NUMBER_OF_HIDDEN_NODES =20
@@ -85,22 +88,60 @@ class Particle:
 
         return output
     '''
-
+    '''
     def z_score(self,x):
         mean=np.mean(x)
         std=np.std(x)
         z=(x-mean)/std
         return z 
+    '''
 
     def calc_fitness(self,inp_x,out_y):
         for i in range(len(inp_x)):
             self.output.append(model.Model(self.w1,self.w2,self.b1,self.b2).forward_propogation(inp_x[i]))
-        self.output = self.z_score(self.output)   #z-score function
+        self.output = scipy.stats.zscore(self.output)   #z-score function
+        
+        h=np.zeros((len(self.output),2))
+
+
+        #normalized points constrained in hyperspace
+        for i in range(len(self.output)):
+            x_dist = np.linalg.norm(self.output[i])
+            numerator=1-np.exp(-(x_dist/2))
+            denominator= x_dist(1+np.exp(-(x_dist/2)))
+            h[i]=self.output*(numerator/denominator)
+
+        similarity_matrix = np.zeros((len(h),len(h)))
+        distance_matric = np.zeros((len(self.output),len(self.output)))
+
+        for i in range(len(h)):
+            for j in range(i,len(h)):
+                similarity = 2-(np.linalg.norm(h[i]-h[j]))
+                similarity_matrix[i][j]=similarity
+                similarity_matrix[j][i]=similarity
+
+        
+
+
+
+
+
+
+        
+
+
+
         s1 = similarity_self(self.output,out_y)
         s2 = similarity_nonself(self.output,out_y)
 
         #we have a weight for each class
         #return output as per equation 6 in the paper
+
+
+    #gives similarity on inputing the h value of the respective points
+    def similarity(self,h1,h2):
+        return 2-np.linalg.norm(h1-h2)
+
 
 
 
