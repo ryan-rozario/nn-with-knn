@@ -1,10 +1,9 @@
-import torch
-import model
+#import torch
+#import model
 import copy 
 import random
-from scipy import stats
 import numpy as np
-
+from scipy import stats
 from sklearn.neighbors import NearestNeighbors
 
 
@@ -25,12 +24,12 @@ C2 = 1.8
 
 
 class Swarm:
-    def __init__(self,lp,size=POPULATION_SIZE,phi_1=C1,phi_2=C2,iter=MAX_GENERATION):
+    def __init__(self,size=POPULATION_SIZE,phi_1=C1,phi_2=C2,iter=MAX_GENERATION):
 
         self.size=size
         self.phi_p=phi_1
         self.phi_g=phi_2
-        self.learning_parameter=lp   #check paper and set this
+        #self.learning_parameter=lp   #check paper and set this
 
         self.max_iter = iter
 
@@ -92,15 +91,14 @@ class Particle:
         self.alpha=None
         self.weight_class=None
         
-    def frac_class_wt(arr):
+    def frac_class_wt(self,arr):
         np.sort(arr)
-	    unique_elements, counts_elements = np.unique(a, return_counts=True)
-	    return counts_elements/arr.size
-
+        unique_elements, counts_elements = np.unique(arr, return_counts=True)
+        return counts_elements/arr.size
 
     def forward(self,inp_x):
         ## activation of hidden layer 
-        z1 = np.dot(x, self.w1) + self.b1
+        z1 = np.dot(inp_x, self.w1) + self.b1
 
         ## activation (output) of final layer 
         z2 = np.dot(z1, self.w2) + self.b2
