@@ -5,6 +5,9 @@ import random
 import scipy
 import numpy as np
 
+from sklearn.neighbors import NearestNeighbors
+
+
 NEAREST_NEIGHBOURS=10
 
 NUMBER_OF_INPUT_NODES = 50
@@ -16,6 +19,9 @@ POPULATION_SIZE =20
 VMAX = 0.4
 C1 = 1.8
 C2 = 1.8
+
+
+
 
 
 class Swarm:
@@ -79,8 +85,12 @@ class Particle:
         self.b1 =torch.randn((1, NUMBER_OF_HIDDEN_NODES)) # bias for hidden layer
         self.b2 =torch.randn((1, NUMBER_OF_OUTPUT_NODES))
 
-        self.fitness=None  #this had to be done
+        self.fitness=None  #this has to be done
         self.output=None   #this has to be done
+
+        #this has to be set
+        self.alpha=0
+        self.weight_class=[]
 
     '''
     def run_forward(self,inp_x):
@@ -97,52 +107,63 @@ class Particle:
     '''
 
     def calc_fitness(self,inp_x,out_y):
-        for i in range(len(inp_x)):
+
+        n=len(inp_x)
+
+
+
+        for i in range(n):
             self.output.append(model.Model(self.w1,self.w2,self.b1,self.b2).forward_propogation(inp_x[i]))
         self.output = scipy.stats.zscore(self.output)   #z-score function
         
-        h=np.zeros((len(self.output),2))
+        h=np.zeros((n,2))
 
 
         #normalized points constrained in hyperspace
-        for i in range(len(self.output)):
+        for i in range(n):
             x_dist = np.linalg.norm(self.output[i])
             numerator=1-np.exp(-(x_dist/2))
             denominator= x_dist(1+np.exp(-(x_dist/2)))
             h[i]=self.output*(numerator/denominator)
 
-        similarity_matrix = np.zeros((len(h),len(h)))
-        distance_matric = np.zeros((len(self.output),len(self.output)))
 
-        for i in range(len(h)):
-            for j in range(i,len(h)):
+
+        similarity_matrix = np.zeros(n,n)
+
+        #gives similarity between every two points
+        for i in range(n):
+            for j in range(i,n):
                 similarity = 2-(np.linalg.norm(h[i]-h[j]))
                 similarity_matrix[i][j]=similarity
                 similarity_matrix[j][i]=similarity
 
-        
+        #nearest neightbours
+        nbrs = NearestNeighbors(n_neighbors=NEAREST_NEIGHBOURS).fit(self.output)
+        distances, indices  = nbrs.kneighbors(self.output)
+
+        #calcualte fitness as per equation 6
+        f=0
+
+        for i in range(n):
+            f_temp=0
+            for j in indices[i]:
+                if out_y[i]==out_y[j]:
+                    f_temp+=similarity_matrix[i][j]
+                else:
+                    f_temp+=self.alpha*similarity_matrix[i][j]
+
+            f+=self.weight_class[out_y[i]]*f_temp
+
+        return f
 
 
 
-
-
-
-        
-
-
-
-        s1 = similarity_self(self.output,out_y)
-        s2 = similarity_nonself(self.output,out_y)
-
-        #we have a weight for each class
-        #return output as per equation 6 in the paper
-
-
+'''
     #gives similarity on inputing the h value of the respective points
     def similarity(self,h1,h2):
         return 2-np.linalg.norm(h1-h2)
 
-
+'''
 
 
 
