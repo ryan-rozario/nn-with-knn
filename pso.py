@@ -91,6 +91,12 @@ class Particle:
         #this has to be set properly
         self.alpha=None
         self.weight_class=None
+        
+    def frac_class_wt(arr):
+        np.sort(arr)
+	    unique_elements, counts_elements = np.unique(a, return_counts=True)
+	    return counts_elements/arr.size
+
 
     def forward(self,inp_x):
         ## activation of hidden layer 
