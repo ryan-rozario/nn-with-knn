@@ -2,7 +2,7 @@ import torch
 import model
 import copy 
 import random
-import scipy
+from scipy import stats
 import numpy as np
 
 from sklearn.neighbors import NearestNeighbors
@@ -78,57 +78,61 @@ class Swarm:
 
 class Particle:
     def  __init__(self):
-        self.w1 =torch.randn(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES) # weight for hidden layer
-        self.w2 =torch.randn(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES) # weight for output layer
+        self.w1 =np.random.randn(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES) # weight for hidden layer
+        self.w2 =np.random.randn(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES) # weight for output layer
 
-        ## initialize tensor variables for bias terms 
-        self.b1 =torch.randn((1, NUMBER_OF_HIDDEN_NODES)) # bias for hidden layer
-        self.b2 =torch.randn((1, NUMBER_OF_OUTPUT_NODES))
+        # initialize tensor variables for bias terms 
+        self.b1 =np.random.randn(1, NUMBER_OF_HIDDEN_NODES) # bias for hidden layer
+        self.b2 =np.random.randn(1, NUMBER_OF_OUTPUT_NODES)
 
         self.fitness=None  #this has to be done
         self.output=None   #this has to be done
 
-        #this has to be set
-        self.alpha=0
-        self.weight_class=[]
+        #this has to be set properly
+        self.alpha=None
+        self.weight_class=None
 
-    '''
-    def run_forward(self,inp_x):
-        output = model.Model(self.w1,self.w2,self.b1,self.b2).forward_propogation(inp_x)
+    def forward(self,inp_x):
+        ## activation of hidden layer 
+        z1 = np.dot(x, self.w1) + self.b1
 
-        return output
-    '''
-    '''
-    def z_score(self,x):
-        mean=np.mean(x)
-        std=np.std(x)
-        z=(x-mean)/std
-        return z 
-    '''
+        ## activation (output) of final layer 
+        z2 = np.dot(z1, self.w2) + self.b2
+
+        self.output=z2
 
     def calc_fitness(self,inp_x,out_y):
 
         n=len(inp_x)
 
+        #run thorugh the neural network and give output in reduced dimensionality space
 
+        #for i in range(n):
+        #    self.output.append(model.Model(self.w1,self.w2,self.b1,self.b2).forward_propogation(inp_x[i]))
 
-        for i in range(n):
-            self.output.append(model.Model(self.w1,self.w2,self.b1,self.b2).forward_propogation(inp_x[i]))
-        self.output = scipy.stats.zscore(self.output)   #z-score function
+        self.forward(inp_x)
+
+        
+
+        
+        self.output = stats.zscore(self.output)   #z-score function
+        
+
         
         h=np.zeros((n,2))
-
-
         #normalized points constrained in hyperspace
         for i in range(n):
             x_dist = np.linalg.norm(self.output[i])
             numerator=1-np.exp(-(x_dist/2))
-            denominator= x_dist(1+np.exp(-(x_dist/2)))
-            h[i]=self.output*(numerator/denominator)
+            denominator= x_dist*(1+np.exp(-(x_dist/2)))
+            h[i]=self.output[i]*(numerator/denominator)
 
+        
+        #print(h)
 
+        
 
-        similarity_matrix = np.zeros(n,n)
+        similarity_matrix = np.zeros((n,n))
 
         #gives similarity between every two points
         for i in range(n):
@@ -137,9 +141,13 @@ class Particle:
                 similarity_matrix[i][j]=similarity
                 similarity_matrix[j][i]=similarity
 
+
+
         #nearest neightbours
         nbrs = NearestNeighbors(n_neighbors=NEAREST_NEIGHBOURS).fit(self.output)
         distances, indices  = nbrs.kneighbors(self.output)
+
+        print(indices)
 
         #calcualte fitness as per equation 6
         f=0
@@ -152,7 +160,9 @@ class Particle:
                 else:
                     f_temp+=self.alpha*similarity_matrix[i][j]
 
-            f+=self.weight_class[out_y[i]]*f_temp
+            index = int(out_y[i])
+
+            f+=self.weight_class[index]*f_temp
 
         return f
 
