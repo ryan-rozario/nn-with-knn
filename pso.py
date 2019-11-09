@@ -1,5 +1,8 @@
-#import torch
-#import model
+'''
+This file contains the main code for the neural network trained using pso
+based on the paper L. Wang, B. Yang, Y. Chen, X. Zhang and J. Orchard, "Improving Neural-Network Classifiers Using Nearest Neighbor Partitioning," in IEEE Transactions on Neural Networks and Learning Systems, vol. 28, no. 10, pp. 2255-2267, Oct. 2017.
+This basically reduces the dimensionality of data to use knn
+'''
 import copy 
 import random
 import numpy as np
@@ -7,22 +10,39 @@ from scipy import stats
 from sklearn.neighbors import NearestNeighbors
 import csv
 
-FILENAME = "data/SPECT.csv"
 
+#define the number of classes in the data
+CLASS_NUM=7
 
+#define the discrimination weight
+ALPHA=0.0001
+
+#define the 
 NEAREST_NEIGHBOURS=10
 
-NUMBER_OF_INPUT_NODES = 22
-NUMBER_OF_HIDDEN_NODES =10
-NUMBER_OF_OUTPUT_NODES = 2
+#number of input nodes should be equal to the number of features
+NUMBER_OF_INPUT_NODES = 10
+NUMBER_OF_HIDDEN_NODES =5
+#number of output nodes should be equal to  dimensions of partition space
+NUMBER_OF_OUTPUT_NODES = 5
 
-MAX_GENERATION = 10  
-POPULATION_SIZE =20
+#maximum number of iterations
+MAX_GENERATION = 100  
+#number of indivisuals
+POPULATION_SIZE =10
+#maximum velocity
 VMAX = 0.4
+
+#constants related to pso
 C1 = 1.8
 C2 = 1.8
 
 
+def sigmoid(Z):
+    '''Applies sigmoid function for a particular input'''
+    return 1/(1+np.exp(-Z))
+
+'''
 def loadTHEfile(fil):
 	lines=csv.reader(open(fil, "r"))
 	dataset=list(lines)
@@ -36,11 +56,14 @@ def loadTHEfile(fil):
 		dataset[i]=[int(x) for x in dataset[i]]
 	return dataset
 
-
+'''
 
 
 
 class Swarm:
+    '''
+    Swarm class contains all the indivisuals
+    '''
     def __init__(self,size=POPULATION_SIZE,phi_1=C1,phi_2=C2,iter=MAX_GENERATION):
 
         self.size=size
@@ -57,20 +80,29 @@ class Swarm:
         self.x=None
         self.y=None
 
-    def initialize_swarm(self,filename):
+    def initialize_swarm(self,data):
+        '''
+        Initialize all the indivisuals with the given data
+        '''
         #give file to each particle
-        data = loadTHEfile(filename)
+        #data = loadTHEfile(filename)
 
-        data = np.array(data, dtype=np.float)
+        #data = np.array(data, dtype=np.float)
 
-        x=data[:,:-1]
-        y=data[:,-1]
+        x=data[:,1:]
+        y=data[:,0]
+
+        global NUMBER_OF_INPUT_NODES
+        NUMBER_OF_INPUT_NODES = len(x[0])
+        
 
         self.x=x
         self.y=y
+        #for i in self.y:
+            #print(i)
 
-        self.group = [Particle(self.x,self.y) for i in range(self.size)]    #todo: Set boundaries
-        self.velocity = [Particle() for i in range(self.size)] #todo: Set boundaries
+        self.group = [Particle(self.x,self.y) for i in range(self.size)]    
+        self.velocity = [Particle() for i in range(self.size)] #Note: Maybe velocity should be made into a seperate class since we are not using all the functions and attributed of Particle class for velocity.
         self.local_best=copy.deepcopy(self.group)
 
 
@@ -81,6 +113,7 @@ class Swarm:
 
 
     def omptimize(self):
+        '''Run the algorithm will maximum iterations are done '''
         iteration=0
         #untill termination condition
         while iteration<self.max_iter:
@@ -94,7 +127,12 @@ class Swarm:
         return self.global_best
 
     def update(self):
-        #random numbers have to be changed
+        '''
+        Update the velocities and weights of the swarm
+        Calculate the fitness
+        Update the local best and global best fitness
+        '''
+        #random numbers
         r_p=random.random()
         r_g=random.random()
         for i in range(self.size):
@@ -110,7 +148,10 @@ class Swarm:
             self.velocity[i].w2 = self.velocity[i].w2  + self.phi_p*r_p*(self.local_best[i].w2-self.group[i].w2)+ self.phi_g*r_g*(self.global_best.w2-self.group[i].w2)
             self.velocity[i].b1 = self.velocity[i].b1  + self.phi_p*r_p*(self.local_best[i].b1-self.group[i].b1)+ self.phi_g*r_g*(self.global_best.b1-self.group[i].b1)
             self.velocity[i].b2 = self.velocity[i].b2  + self.phi_p*r_p*(self.local_best[i].b2-self.group[i].b2)+ self.phi_g*r_g*(self.global_best.b2-self.group[i].b2)
+            
             '''
+            NOT FINISHED UNCOMMENT AND FINISH THIS IF U WANT TO USE IT
+            #cap the velocity at VMAX
             if(self.velocity[i].w1>VMAX):
                 self.velocity[i].w1=VMAX
             if(self.velocity[i].w2>VMAX):
@@ -128,15 +169,17 @@ class Swarm:
             self.group[i].w2 = self.group[i].w2 + self.velocity[i].w2
             self.group[i].b1 = self.group[i].b1 + self.velocity[i].b1
             self.group[i].b2 = self.group[i].b2 + self.velocity[i].b2 
-
+            
+            #calculate the fitness
             self.group[i].calc_fitness(self.x,self.y)
 
         for i in range(self.size):
-
-            if self.group[i].fitness > self.local_best[i].fitness:  #check conditions and sign later
+            #update local best
+            if self.group[i].fitness > self.local_best[i].fitness:
                 self.local_best[i] = copy.deepcopy(self.group[i])
 
-                if self.group[i].fitness > self.global_best.fitness:  #check conditions and sign again
+                #calculate global best
+                if self.group[i].fitness > self.global_best.fitness:
                     self.global_best = copy.deepcopy(self.group[i])
             '''
             print("Local Bests")
@@ -146,47 +189,80 @@ class Swarm:
             
 
 class Particle:
+    '''
+    Each indivisual represents a neural network. We PSO to train the weights for the neural network.
+    '''
     def  __init__(self,x=[],y=[]):
-        self.w1 =np.random.randn(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES) # weight for hidden layer
-        self.w2 =np.random.randn(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES) # weight for output layer
+        #initial weights are set between -4 and +4#
+        #refer R. Eberhart and J. Kennedy, “A new optimizer using particle swarm theory,”
+        weight_initial_min=-4
+        weight_initial_max=4
+        self.w1 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES))-weight_initial_min   #np.random.randn(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES) # weight for hidden layer
+        self.w2 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES))-weight_initial_min   #np.random.randn(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES) # weight for output layer
 
         # initialize tensor variables for bias terms 
-        self.b1 =np.random.randn(1, NUMBER_OF_HIDDEN_NODES) # bias for hidden layer
-        self.b2 =np.random.randn(1, NUMBER_OF_OUTPUT_NODES)
+        self.b1 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(1, NUMBER_OF_HIDDEN_NODES))-weight_initial_min#np.random.randn(1, NUMBER_OF_HIDDEN_NODES) # bias for hidden layer
+        self.b2 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(1, NUMBER_OF_OUTPUT_NODES))-weight_initial_min#np.random.randn(1, NUMBER_OF_OUTPUT_NODES)
 
-        self.fitness=None  #this has to be done
-        self.output=None   #this has to be done
+        self.fitness=None  #stores fitness value for each neural network
+        self.output=None   #stores output of the neural network in the reduced dimensionality partition space
 
-        #this has to be set properly
-        self.alpha=0.01
+        #discrimination weight
+        self.alpha=ALPHA
+
         if x!=[] and y!=[]:
+            #weight class contains the fraction of the data elements belonging to each class of the dataset
             self.weight_class=self.frac_class_wt(y)
+            #initialize fitness
             self.calc_fitness(x,y)
 
         
     def frac_class_wt(self,arr):
-        np.sort(arr)
-        unique_elements, counts_elements = np.unique(arr, return_counts=True)
-        return counts_elements/arr.size
+        '''
+        Gives the fraction of each class in the dataset
+        '''        
+        
 
-    def forward(self,inp_x):
+        frac_arr=[0 for i in range(CLASS_NUM)]
+
+        for j in arr:
+            class_num=int(j)-1
+            frac_arr[class_num]+=1
+        #print(frac_arr)
+        for i in range(len(frac_arr)):
+            frac_arr[i]=frac_arr[i]/float(arr.size)
+        
+        return frac_arr
+
+    def forward(self,inp_x,activation="sigmoid"):
+        '''
+        Gives the ouput of the neural network
+        '''
+        
+        #specifies activation function not working right now
+        if activation is "sigmoid":
+            activation = sigmoid
+        else:
+            raise Exception('Non-supported activation function')
+        
         ## activation of hidden layer 
         z1 = np.dot(inp_x, self.w1) + self.b1
-
+        #a1 = sigmoid(z1)
         ## activation (output) of final layer 
         z2 = np.dot(z1, self.w2) + self.b2
+        #a2 = activation(z2)
 
+        
         self.output=z2
 
     def calc_fitness(self,inp_x,out_y):
+        '''
+        Calculate the fitness of each neural network using similarity measure given in the paper
+        '''
 
         n=len(inp_x)
 
         #run thorugh the neural network and give output in reduced dimensionality space
-
-        #for i in range(n):
-        #    self.output.append(model.Model(self.w1,self.w2,self.b1,self.b2).forward_propogation(inp_x[i]))
-
         self.forward(inp_x)
 
         
@@ -196,8 +272,9 @@ class Particle:
         
 
         
-        h=np.zeros((n,2))
+        h=np.zeros((n,NUMBER_OF_OUTPUT_NODES))
         #normalized points constrained in hyperspace
+        #we constrain the normalized points into a hypersphere of radius 1
         for i in range(n):
             x_dist = np.linalg.norm(self.output[i])
             numerator=1-np.exp(-(x_dist/2))
@@ -208,7 +285,7 @@ class Particle:
         #print(h)
 
         
-
+        #similarity matrix gives the similarity between every two records in the dataset
         similarity_matrix = np.zeros((n,n))
 
         #gives similarity between every two points
@@ -221,23 +298,29 @@ class Particle:
 
 
         #nearest neightbours
+        #for i in self.output:
+            #print(i)
+
+        #get the nearest neighbours
         nbrs = NearestNeighbors(n_neighbors=NEAREST_NEIGHBOURS).fit(self.output)
         distances, indices  = nbrs.kneighbors(self.output)
 
-        #print(indices)
 
-        #calcualte fitness as per equation 6
+        #calcualte fitness as per equation 6 in the paper
         f=0
 
         for i in range(n):
             f_temp=0
             for j in indices[i]:
                 if out_y[i]==out_y[j]:
+                    #similarity for elements of same class
                     f_temp+=similarity_matrix[i][j]
                 else:
+                    #similarity for elements of different class
                     f_temp+=self.alpha*similarity_matrix[i][j]
 
-            index = int(out_y[i])
+            #index for the weight_class
+            index = int(out_y[i])-1
 
             f+=self.weight_class[index]*f_temp
         self.fitness=f
@@ -251,14 +334,7 @@ class Particle:
         return 2-np.linalg.norm(h1-h2)
 
 '''
-def train(f):
-    s=Swarm()
-    s.initialize_swarm(f)
-    ans=s.omptimize()
-    print(ans)
 
-f=FILENAME
-train(f)
 
 
 
