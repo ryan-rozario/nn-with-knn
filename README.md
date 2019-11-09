@@ -31,14 +31,19 @@ Test your model for accuracy using the testing set
 ## Datasets Used
 From the paper:
 Well-known classification data sets were selected from the UCI machine learning repository (http://archive.ics.uci.edu/ml/) for the experiments, including 
-Ionosphere Data Set(Ionosphere),
-Wisconsin Breast Cancer Diagnostic Data Set (WBCD),
-Fertility Data Set (Fertility), 
-Haberman’s Survival Data Set (Haberman), 
-Parkinsons Data Set (Parkinsons), 
-Iris Data Set (IRIS), 
-Wine Data Set (Wine), 
-Contraceptive Method Choice Data Set (CMC),
-Seeds Data Set (Seeds), 
-Glass Identification Data Set (Glass), 
-Zoo Data Set (Zoo).
+* Ionosphere Data Set(Ionosphere),
+* Wisconsin Breast Cancer Diagnostic Data Set (WBCD),
+* Fertility Data Set (Fertility), 
+* Haberman’s Survival Data Set (Haberman), 
+* Parkinsons Data Set (Parkinsons), 
+* Iris Data Set (IRIS), 
+* Wine Data Set (Wine), 
+* Contraceptive Method Choice Data Set (CMC),
+* Seeds Data Set (Seeds), 
+* Glass Identification Data Set (Glass), 
+* Zoo Data Set (Zoo).
+
+## Requirements
+* python3
+* numpy
+* scikit-learn
