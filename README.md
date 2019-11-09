@@ -1,16 +1,18 @@
 # Reducing Dimensionality of data using a Neural Network trained using PSO to apply KNN
 ## Paper
 Base Paper: L. Wang, B. Yang, Y. Chen, X. Zhang and J. Orchard, "Improving Neural-Network Classifiers Using Nearest Neighbor Partitioning," in IEEE Transactions on Neural Networks and Learning Systems, vol. 28, no. 10, pp. 2255-2267, Oct. 2017. doi: 10.1109/TNNLS.2016.2580570
+
 URL: http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7502076&isnumber=8038919
+
 
 Paper for Particle Swarm Optimization: R. Eberhart and J. Kennedy, “A new optimizer using particle swarm theory,” in Proc. 6th Int. Symp. Micro Mach. Human Sci., 1995 pp. 39–43.
 ## Implementation
 A neural network is used to reduce the dimensionality of data, so as to perform KNN faster.
 This neural network is trained using particle swarm optimization
 
-[pso](pso.py) contains code for the neural network and training it using pso
-[knn_code](knn_code.py) conains code for knn to test a neural network for accuracy
-[final_code](final_code.py) loads the dataset and does k-fold validation
+* [pso](pso.py) contains code for the neural network and training it using pso
+* [knn_code](knn_code.py) conains code for knn to test a neural network for accuracy
+* [final_code](final_code.py) loads the dataset and does k-fold validation
 
 ### How the code works
 * k-fold Validation
