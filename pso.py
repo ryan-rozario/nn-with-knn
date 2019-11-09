@@ -7,6 +7,8 @@ from scipy import stats
 from sklearn.neighbors import NearestNeighbors
 import csv
 
+FILENAME = "data/SPECT.csv"
+
 
 NEAREST_NEIGHBOURS=10
 
@@ -14,7 +16,7 @@ NUMBER_OF_INPUT_NODES = 22
 NUMBER_OF_HIDDEN_NODES =10
 NUMBER_OF_OUTPUT_NODES = 2
 
-MAX_GENERATION = 10
+MAX_GENERATION = 10  
 POPULATION_SIZE =20
 VMAX = 0.4
 C1 = 1.8
@@ -52,9 +54,22 @@ class Swarm:
         self.group = []
         self.global_best=None
         self.local_best=[]
+        self.x=None
+        self.y=None
 
-    def initialize_swarm(self):
-        self.group = [Particle() for i in range(self.size)]    #todo: Set boundaries
+    def initialize_swarm(self,filename):
+        #give file to each particle
+        data = loadTHEfile(filename)
+
+        data = np.array(data, dtype=np.float)
+
+        x=data[:,:-1]
+        y=data[:,-1]
+
+        self.x=x
+        self.y=y
+
+        self.group = [Particle(self.x,self.y) for i in range(self.size)]    #todo: Set boundaries
         self.velocity = [Particle() for i in range(self.size)] #todo: Set boundaries
         self.local_best=copy.deepcopy(self.group)
 
@@ -76,6 +91,7 @@ class Swarm:
         print(self.global_best.fitness)
         print("\n\n")
         '''
+        return self.global_best
 
     def update(self):
         #random numbers have to be changed
@@ -94,8 +110,17 @@ class Swarm:
             self.velocity[i].w2 = self.velocity[i].w2  + self.phi_p*r_p*(self.local_best[i].w2-self.group[i].w2)+ self.phi_g*r_g*(self.global_best.w2-self.group[i].w2)
             self.velocity[i].b1 = self.velocity[i].b1  + self.phi_p*r_p*(self.local_best[i].b1-self.group[i].b1)+ self.phi_g*r_g*(self.global_best.b1-self.group[i].b1)
             self.velocity[i].b2 = self.velocity[i].b2  + self.phi_p*r_p*(self.local_best[i].b2-self.group[i].b2)+ self.phi_g*r_g*(self.global_best.b2-self.group[i].b2)
+            '''
+            if(self.velocity[i].w1>VMAX):
+                self.velocity[i].w1=VMAX
+            if(self.velocity[i].w2>VMAX):
+                self.velocity[i].w2=VMAX
+            if(self.velocity[i].b1>VMAX):
+                self.velocity[i].b1=VMAX
+            if(self.velocity[i].b2>VMAX):
+                self.velocity[i].b2=VMAX
+            '''
             
-
 
 
             #update weights
@@ -103,6 +128,10 @@ class Swarm:
             self.group[i].w2 = self.group[i].w2 + self.velocity[i].w2
             self.group[i].b1 = self.group[i].b1 + self.velocity[i].b1
             self.group[i].b2 = self.group[i].b2 + self.velocity[i].b2 
+
+            self.group[i].calc_fitness(self.x,self.y)
+
+        for i in range(self.size):
 
             if self.group[i].fitness > self.local_best[i].fitness:  #check conditions and sign later
                 self.local_best[i] = copy.deepcopy(self.group[i])
@@ -117,7 +146,7 @@ class Swarm:
             
 
 class Particle:
-    def  __init__(self):
+    def  __init__(self,x=[],y=[]):
         self.w1 =np.random.randn(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES) # weight for hidden layer
         self.w2 =np.random.randn(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES) # weight for output layer
 
@@ -130,19 +159,9 @@ class Particle:
 
         #this has to be set properly
         self.alpha=0.01
-        self.weight_class=None
-        
-        '''
-        data = loadTHEfile("SPECT.csv")
-
-        data = np.array(data, dtype=np.float)
-
-        x=data[:,:-1]
-        y=data[:,-1]
-
-        self.weight_class=self.frac_class_wt(y)
-        self.calc_fitness(x,y)
-        '''
+        if x!=[] and y!=[]:
+            self.weight_class=self.frac_class_wt(y)
+            self.calc_fitness(x,y)
 
         
     def frac_class_wt(self,arr):
@@ -232,14 +251,15 @@ class Particle:
         return 2-np.linalg.norm(h1-h2)
 
 '''
+def train(f):
+    s=Swarm()
+    s.initialize_swarm(f)
+    ans=s.omptimize()
+    print(ans)
 
+f=FILENAME
+train(f)
 
-'''
-
-s=Swarm()
-s.initialize_swarm()
-s.omptimize()
-'''
 
 
         
