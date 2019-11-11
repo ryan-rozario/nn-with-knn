@@ -16,43 +16,57 @@ def sigmoid(Z):
     return 1/(1+np.exp(-Z))
 
 
-def forward(final_nn,inp_x,activation="sigmoid"):
-    '''
-    Map the points to reduced dimensionality partition space using the obtained neural network
-    '''
-
-    if activation is "sigmoid":
-        activation = sigmoid
-    else:
-        raise Exception('Non-supported activation function')
-    ## activation of hidden layer 
-    z1 = np.dot(inp_x, final_nn.w1) + final_nn.b1
-    #print(z1[0])
-    #a1 = sigmoid(z1)
-    #print(a1[0])
-    ## activation (output) of final layer 
-    z2 = np.dot(z1, final_nn.w2) + final_nn.b2
-    #a2 = activation(z2)
-
-    
-    output=z2
-
-    return output
-
 
 def accuracy(final_nn,test,train):
     '''
     Obtain the accuracy for the neural network
     '''
-    train_points=forward(final_nn,train[:,1:])
-    test_points=forward(final_nn,test[:,1:])
+
+    final_nn.forward(train[:,1:])
+    #final_nn.kmeans_eval(train[:,1:])
+    train_points=final_nn.output
+    final_nn.forward(test[:,1:])
+    #final_nn.kmeans_eval(test[:,1:])
+    test_points=final_nn.output
     knn=KNeighborsClassifier(n_neighbors=10)
     #print(train[:,0])
     knn.fit(train_points,train[:,0])
     y_pred=knn.predict(test_points)
-    score = metrics.accuracy_score(test[:,0],y_pred)
+    acc = metrics.accuracy_score(test[:,0],y_pred)
+    fscr = metrics.f1_score(test[:,0],y_pred, average='macro',labels=np.unique(y_pred))
 
-    return score
+    
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+
+    N = 4 # Number of labels
+
+    # setup the plot
+    fig, ax = plt.subplots(1,1, figsize=(6,6))
+    # define the data
+    x = train_points[:,0]
+    y = train_points[:,1]
+    tag = train[:,0] # Tag each point with a corresponding label    
+    #print(train_points)
+    # define the colormap
+    cmap = plt.cm.jet
+    # extract all colors from the .jet map
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    # create the new map
+    cmap = cmap.from_list('Custom cmap', cmaplist, cmap.N)
+
+    # define the bins and normalize
+    bounds = np.linspace(0,N,N+1)
+    norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+
+    # make the scatter
+    scat = ax.scatter(x,y,c=tag,cmap=cmap,     norm=norm)
+    # create the colorbar
+    cb = plt.colorbar(scat, spacing='proportional',ticks=bounds)
+    cb.set_label('Custom cbar')
+    plt.show()
+    
+    return acc , fscr
 
 
     #print(test_points)

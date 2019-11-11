@@ -28,6 +28,27 @@ Test your model for accuracy using the testing set
 - [x] Code for k-fold validation and knn
 - [x] Test for accuracy on different datasets
 
+## Parameters
+Parameters in [pso](pso.py) related to the neural network
+
+* CLASS_NUM : number_of_classes in the dataset
+* ALPHA: discriminant weight
+* NEAREST_NEIGHBOURS: number of nearest neighbours
+* NUMBER_OF_INPUT_NODES: input nodes of neural network should be equal to the number of features
+* NUMBER_OF_HIDDEN_NODES: number of hidden nodes
+* NUMBER_OF_OUTPUT_NODES: number of output nodes should be equal to  dimensions of partition space
+* MAX_GENERATION : maximum number of iterations 
+* POPULATION_SIZE: number of indivisuals in a population
+
+
+Parameters in [final_code](final_code.py) related to the dataset input
+* FILENAME: path to file
+* class_flag: set the class_flag to -1 if the class label is the last column or set class_flag to 0 if class label is first column
+
+
+By default you will be asked for number of classes, alpha, number of output nodes, filename, class_flag when you run the program
+
+
 ## Datasets Used
 From the paper:
 Well-known classification data sets were selected from the UCI machine learning repository (http://archive.ics.uci.edu/ml/) for the experiments, including 

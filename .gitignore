@@ -1,2 +1,6 @@
 /data
 .vscode
+*.pyc
+/inp
+/output
+/parameter_setting.txt

@@ -12,22 +12,23 @@ import csv
 
 
 #define the number of classes in the data
-CLASS_NUM=7
+CLASS_NUM=int(input("Enter number of classes"))
 
 #define the discrimination weight
-ALPHA=0.0001
+ALPHA=float(input("Enter alpha"))
+#print("alpha ",ALPHA)
 
 #define the 
 NEAREST_NEIGHBOURS=10
 
 #number of input nodes should be equal to the number of features
-NUMBER_OF_INPUT_NODES = 10
+NUMBER_OF_INPUT_NODES = 9
 NUMBER_OF_HIDDEN_NODES =5
 #number of output nodes should be equal to  dimensions of partition space
-NUMBER_OF_OUTPUT_NODES = 5
+NUMBER_OF_OUTPUT_NODES = int(input("Enter number of output nodes"))
 
 #maximum number of iterations
-MAX_GENERATION = 100  
+MAX_GENERATION = 100 
 #number of indivisuals
 POPULATION_SIZE =10
 #maximum velocity
@@ -36,6 +37,13 @@ VMAX = 0.4
 #constants related to pso
 C1 = 1.8
 C2 = 1.8
+
+def tanh(X):
+    return np.tanh(X)
+
+def relu(X):
+    '''relu activation function'''
+    return np.maximum(0,X)
 
 
 def sigmoid(Z):
@@ -69,8 +77,7 @@ class Swarm:
         self.size=size
         self.phi_p=phi_1
         self.phi_g=phi_2
-        #self.learning_parameter=lp   #check paper and set this
-
+        #self.learning_parameter=lp   #not needed
         self.max_iter = iter
 
         self.velocity=[]
@@ -94,6 +101,7 @@ class Swarm:
 
         global NUMBER_OF_INPUT_NODES
         NUMBER_OF_INPUT_NODES = len(x[0])
+        #print(NUMBER_OF_INPUT_NODES)
         
 
         self.x=x
@@ -102,7 +110,7 @@ class Swarm:
             #print(i)
 
         self.group = [Particle(self.x,self.y) for i in range(self.size)]    
-        self.velocity = [Particle() for i in range(self.size)] #Note: Maybe velocity should be made into a seperate class since we are not using all the functions and attributed of Particle class for velocity.
+        self.velocity = [Vel() for i in range(self.size)] 
         self.local_best=copy.deepcopy(self.group)
 
 
@@ -149,18 +157,51 @@ class Swarm:
             self.velocity[i].b1 = self.velocity[i].b1  + self.phi_p*r_p*(self.local_best[i].b1-self.group[i].b1)+ self.phi_g*r_g*(self.global_best.b1-self.group[i].b1)
             self.velocity[i].b2 = self.velocity[i].b2  + self.phi_p*r_p*(self.local_best[i].b2-self.group[i].b2)+ self.phi_g*r_g*(self.global_best.b2-self.group[i].b2)
             
-            '''
-            NOT FINISHED UNCOMMENT AND FINISH THIS IF U WANT TO USE IT
+
             #cap the velocity at VMAX
-            if(self.velocity[i].w1>VMAX):
-                self.velocity[i].w1=VMAX
-            if(self.velocity[i].w2>VMAX):
-                self.velocity[i].w2=VMAX
-            if(self.velocity[i].b1>VMAX):
-                self.velocity[i].b1=VMAX
-            if(self.velocity[i].b2>VMAX):
-                self.velocity[i].b2=VMAX
-            '''
+            #print("1")
+            # self.velocity[i].w1=np.maximum(self.velocity[i].w1,VMAX)
+            # self.velocity[i].w2=np.maximum(self.velocity[i].w2,VMAX)
+            # self.velocity[i].b1=np.maximum(self.velocity[i].b1,VMAX)
+            # self.velocity[i].b2=np.maximum(self.velocity[i].b2,VMAX)
+
+            
+
+            for j in range(len(self.velocity[i].w1)):
+                for k in range(len(self.velocity[i].w1[j])):
+                    if self.velocity[i].w1[j][k]>VMAX:
+                        self.velocity[i].w1[j][k]=VMAX
+            for j in range(len(self.velocity[i].w2)):
+                for k in range(len(self.velocity[i].w2[j])):
+                    if self.velocity[i].w2[j][k]>VMAX:
+                        self.velocity[i].w2[j][k]=VMAX
+            for j in range(len(self.velocity[i].b1)):
+                for k in range(len(self.velocity[i].b1[j])):
+                    if self.velocity[i].b1[j][k]>VMAX:
+                        self.velocity[i].b1[j][k]=VMAX
+            for j in range(len(self.velocity[i].b2)):
+                for k in range(len(self.velocity[i].b2[j])):
+                    if self.velocity[i].b2[j][k]>VMAX:
+                        self.velocity[i].b2[j][k]=VMAX
+
+            for j in range(len(self.velocity[i].w1)):
+                for k in range(len(self.velocity[i].w1[j])):
+                    if self.velocity[i].w1[j][k]<-VMAX:
+                        self.velocity[i].w1[j][k]=-VMAX
+            for j in range(len(self.velocity[i].w2)):
+                for k in range(len(self.velocity[i].w2[j])):
+                    if self.velocity[i].w2[j][k]<-VMAX:
+                        self.velocity[i].w2[j][k]=-VMAX
+            for j in range(len(self.velocity[i].b1)):
+                for k in range(len(self.velocity[i].b1[j])):
+                    if self.velocity[i].b1[j][k]<VMAX:
+                        self.velocity[i].b1[j][k]=-VMAX
+            for j in range(len(self.velocity[i].b2)):
+                for k in range(len(self.velocity[i].b2[j])):
+                    if self.velocity[i].b2[j][k]<VMAX:
+                        self.velocity[i].b2[j][k]=-VMAX
+ 
+
             
 
 
@@ -194,15 +235,15 @@ class Particle:
     '''
     def  __init__(self,x=[],y=[]):
         #initial weights are set between -4 and +4#
-        #refer R. Eberhart and J. Kennedy, “A new optimizer using particle swarm theory,”
+        #refer R. Eberhart and J. Kennedy,A new optimizer using particle swarm theory
         weight_initial_min=-4
         weight_initial_max=4
-        self.w1 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES))-weight_initial_min   #np.random.randn(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES) # weight for hidden layer
-        self.w2 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES))-weight_initial_min   #np.random.randn(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES) # weight for output layer
+        self.w1 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES))+weight_initial_min   #np.random.randn(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES) # weight for hidden layer
+        self.w2 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES))+weight_initial_min   #np.random.randn(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES) # weight for output layer
 
         # initialize tensor variables for bias terms 
-        self.b1 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(1, NUMBER_OF_HIDDEN_NODES))-weight_initial_min#np.random.randn(1, NUMBER_OF_HIDDEN_NODES) # bias for hidden layer
-        self.b2 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(1, NUMBER_OF_OUTPUT_NODES))-weight_initial_min#np.random.randn(1, NUMBER_OF_OUTPUT_NODES)
+        self.b1 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(1, NUMBER_OF_HIDDEN_NODES))+weight_initial_min#np.random.randn(1, NUMBER_OF_HIDDEN_NODES) # bias for hidden layer
+        self.b2 =(weight_initial_max-weight_initial_min)*np.random.random_sample(size=(1, NUMBER_OF_OUTPUT_NODES))+weight_initial_min#np.random.randn(1, NUMBER_OF_OUTPUT_NODES)
 
         self.fitness=None  #stores fitness value for each neural network
         self.output=None   #stores output of the neural network in the reduced dimensionality partition space
@@ -240,20 +281,27 @@ class Particle:
         '''
         
         #specifies activation function not working right now
+        
         if activation is "sigmoid":
             activation = sigmoid
+        elif activation is "tanh":
+            activation = tanh
+        elif activation is "relu":
+            activation = relu
         else:
             raise Exception('Non-supported activation function')
         
         ## activation of hidden layer 
         z1 = np.dot(inp_x, self.w1) + self.b1
-        #a1 = sigmoid(z1)
+        a1 = activation(z1)
+        #print(self.w1)
         ## activation (output) of final layer 
-        z2 = np.dot(z1, self.w2) + self.b2
-        #a2 = activation(z2)
+        z2 = np.dot(a1, self.w2) + self.b2
+        a2 = activation(z2)
 
-        
-        self.output=z2
+        #print(z2)
+        #self.output=z2
+        self.output=a2
 
     def calc_fitness(self,inp_x,out_y):
         '''
@@ -281,8 +329,9 @@ class Particle:
             denominator= x_dist*(1+np.exp(-(x_dist/2)))
             h[i]=self.output[i]*(numerator/denominator)
 
-        
+        self.output=h
         #print(h)
+
 
         
         #similarity matrix gives the similarity between every two records in the dataset
@@ -303,7 +352,7 @@ class Particle:
 
         #get the nearest neighbours
         nbrs = NearestNeighbors(n_neighbors=NEAREST_NEIGHBOURS).fit(self.output)
-        distances, indices  = nbrs.kneighbors(self.output)
+        _distances, indices  = nbrs.kneighbors(self.output)
 
 
         #calcualte fitness as per equation 6 in the paper
@@ -320,11 +369,41 @@ class Particle:
                     f_temp+=self.alpha*similarity_matrix[i][j]
 
             #index for the weight_class
-            index = int(out_y[i])-1
+            index = int(out_y[i])-1   
 
             f+=self.weight_class[index]*f_temp
         self.fitness=f
         return f
+
+    def kmeans_eval(self,inp_x):
+        '''
+        Calculate the fitness of each neural network using similarity measure given in the paper
+        '''
+
+        n=len(inp_x)
+
+        #run thorugh the neural network and give output in reduced dimensionality space
+        self.forward(inp_x)
+
+        
+
+        
+        self.output = stats.zscore(self.output)   #z-score function
+        
+
+        
+        h=np.zeros((n,NUMBER_OF_OUTPUT_NODES))
+        #normalized points constrained in hyperspace
+        #we constrain the normalized points into a hypersphere of radius 1
+        for i in range(n):
+            x_dist = np.linalg.norm(self.output[i])
+            numerator=1-np.exp(-(x_dist/2))
+            denominator= x_dist*(1+np.exp(-(x_dist/2)))
+            h[i]=self.output[i]*(numerator/denominator)
+
+        self.output=h
+        #print(h)
+
 
 
 
@@ -338,6 +417,15 @@ class Particle:
 
 
 
-        
+class Vel:
+    def  __init__(self,x=[],y=[]):
+        #initial weights are set between -4 and +4#
+        #refer R. Eberhart and J. Kennedy,A new optimizer using particle swarm theory
+        self.w1 =np.zeros((NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES))   #np.random.randn(NUMBER_OF_INPUT_NODES, NUMBER_OF_HIDDEN_NODES) # weight for hidden layer
+        self.w2 =np.zeros((NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES))   #np.random.randn(NUMBER_OF_HIDDEN_NODES, NUMBER_OF_OUTPUT_NODES) # weight for output layer
+
+        # initialize tensor variables for bias terms 
+        self.b1 =np.zeros((1, NUMBER_OF_HIDDEN_NODES))#np.random.randn(1, NUMBER_OF_HIDDEN_NODES) # bias for hidden layer
+        self.b2 =np.zeros((1, NUMBER_OF_OUTPUT_NODES))#np.random.randn(1, NUMBER_OF_OUTPUT_NODES)
 
 
